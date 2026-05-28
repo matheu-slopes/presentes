@@ -337,7 +337,6 @@ export default function Home() {
                   className="bg-green-600 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-green-700 transition w-full"
                   onClick={() => {
                     handleConfirm();
-                    setStep("calendar");
                   }}
                 >
                   Confirmar reserva
