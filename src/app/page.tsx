@@ -288,15 +288,6 @@ function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 text-black dark:text-white font-sans relative overflow-hidden">
-      {/* Detalhe decorativo: imagem utensílios */}
-      {step === "welcome" && (
-        <img
-          src="/utensilios-cozinha.png"
-          alt="Utensílios de cozinha"
-          className="pointer-events-none select-none opacity-20 absolute right-0 bottom-0 w-64 max-w-[60vw] md:w-80 md:max-w-[40vw] lg:w-96 lg:max-w-[30vw] z-0"
-          aria-hidden="true"
-        />
-      )}
       <main className="w-full max-w-lg sm:max-w-2xl px-4 sm:px-8 py-8 flex flex-col gap-12 items-center justify-center mx-auto relative z-10">
         {step === "welcome" && (
           <header className="mb-8 text-center flex flex-col items-center gap-4 w-full">
@@ -481,15 +472,6 @@ function Home() {
                   onClick={() => setStep("gifts")}
                 >
                   Voltar
-                </button>
-                <button
-                  type="button"
-                  className="bg-blue-600 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-blue-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => downloadICS(selected)}
-                  disabled={selected.length === 0}
-                  title="Adicionar ao calendário"
-                >
-                  Adicionar ao calendário
                 </button>
               </div>
             </div>
