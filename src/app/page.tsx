@@ -288,20 +288,28 @@ function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 text-black dark:text-white font-sans relative overflow-hidden">
-      <main className="w-full max-w-lg sm:max-w-2xl px-4 sm:px-8 py-8 flex flex-col gap-12 items-center justify-center mx-auto relative z-10">
+      <main
+        className={
+          step === "gifts"
+            ? "w-full max-w-lg sm:max-w-2xl px-4 sm:px-8 py-8 flex flex-col gap-12 items-center justify-center mx-auto relative z-10"
+            : "w-full max-w-lg sm:max-w-2xl px-2 sm:px-4 py-4 flex flex-col gap-6 items-center justify-center mx-auto relative z-10 min-h-[90vh] h-[90vh]"
+        }
+        style={step === "gifts" ? {} : {overflow: 'hidden'}}
+      >
         {step === "welcome" && (
-          <header className="mb-8 text-center flex flex-col items-center gap-4 w-full">
+          <header className="mb-8 text-center flex flex-col items-center gap-2 w-full">
             {/* Imagem decorativa centralizada */}
             <img
-              src="/utensilios-cozinha.png"
-              alt="Utensílios de cozinha"
-              className="mx-auto mb-2 w-32 sm:w-40 md:w-48 lg:w-56 opacity-80 drop-shadow-md"
+              src="/Design%20sem%20nome.png"
+              alt="Imagem decorativa"
+              className="mx-auto mb-0 w-32 sm:w-40 md:w-48 lg:w-56 opacity-80 drop-shadow-md"
+              style={{marginBottom: 0, marginTop: 0, display: 'block'}}
               aria-hidden="true"
             />
             <h1 className="text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white drop-shadow-sm">Chá dos Noivos</h1>
             <p className="text-xl text-zinc-600 dark:text-zinc-300 mt-1 font-medium">Reserve um presente especial para Matheus & Lívia</p>
             <div className="mt-4 bg-white/80 dark:bg-zinc-900/80 shadow-lg rounded-2xl p-6 flex flex-col items-center gap-3 w-full max-w-md border border-zinc-200 dark:border-zinc-700">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-center justify-center text-lg">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-center justify-center text-base sm:text-lg">
                 <span className="font-semibold">📅 13 de Junho</span>
                 <span className="font-semibold">⏰ 15H</span>
               </div>
@@ -326,14 +334,14 @@ function Home() {
                 }}
                 maxLength={15}
                 placeholder="Telefone (WhatsApp)"
-                className="rounded border border-zinc-300 dark:border-zinc-700 p-2 bg-white dark:bg-zinc-800 text-black dark:text-white w-64 text-center"
+                className="rounded border border-zinc-300 dark:border-zinc-700 p-2 bg-white dark:bg-zinc-800 text-black dark:text-white w-full max-w-xs text-center"
                 required
               />
               {phoneError && <span className="text-red-500 text-sm text-center max-w-xs">{phoneError}</span>}
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-64 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-full max-w-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Carregando..." : "Avançar"}
               </button>
@@ -342,7 +350,7 @@ function Home() {
         )}
 
         {step === "name" && (
-          <form className="flex flex-col gap-4 items-center w-full max-w-xs mx-auto" onSubmit={handleNameSubmit}>
+          <form className="flex flex-col gap-3 items-center w-full max-w-xs mx-auto" onSubmit={handleNameSubmit}>
             <label className="text-lg font-medium">Qual seu nome completo?</label>
             <input
               type="text"
@@ -449,7 +457,7 @@ function Home() {
 
         {step === "review" && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col items-center gap-8">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-md flex flex-col items-center gap-6 max-h-[90vh] overflow-y-auto">
               <h2 className="text-3xl font-bold text-zinc-900 dark:text-white text-center">Revisar presentes selecionados</h2>
               <ul className="list-disc ml-6 text-lg w-full">
                 {selected.map(item => (
