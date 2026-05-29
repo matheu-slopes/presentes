@@ -287,10 +287,26 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 text-black dark:text-white font-sans">
-      <main className="w-full max-w-lg sm:max-w-2xl px-4 sm:px-8 py-8 flex flex-col gap-12 items-center justify-center mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 text-black dark:text-white font-sans relative overflow-hidden">
+      {/* Detalhe decorativo: imagem utensílios */}
+      {step === "welcome" && (
+        <img
+          src="/utensilios-cozinha.png"
+          alt="Utensílios de cozinha"
+          className="pointer-events-none select-none opacity-20 absolute right-0 bottom-0 w-64 max-w-[60vw] md:w-80 md:max-w-[40vw] lg:w-96 lg:max-w-[30vw] z-0"
+          aria-hidden="true"
+        />
+      )}
+      <main className="w-full max-w-lg sm:max-w-2xl px-4 sm:px-8 py-8 flex flex-col gap-12 items-center justify-center mx-auto relative z-10">
         {step === "welcome" && (
           <header className="mb-8 text-center flex flex-col items-center gap-4 w-full">
+            {/* Imagem decorativa centralizada */}
+            <img
+              src="/utensilios-cozinha.png"
+              alt="Utensílios de cozinha"
+              className="mx-auto mb-2 w-32 sm:w-40 md:w-48 lg:w-56 opacity-80 drop-shadow-md"
+              aria-hidden="true"
+            />
             <h1 className="text-5xl font-extrabold tracking-tight text-zinc-900 dark:text-white drop-shadow-sm">Chá dos Noivos</h1>
             <p className="text-xl text-zinc-600 dark:text-zinc-300 mt-1 font-medium">Reserve um presente especial para Matheus & Lívia</p>
             <div className="mt-4 bg-white/80 dark:bg-zinc-900/80 shadow-lg rounded-2xl p-6 flex flex-col items-center gap-3 w-full max-w-md border border-zinc-200 dark:border-zinc-700">
