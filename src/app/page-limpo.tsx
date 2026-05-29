@@ -1,14 +1,18 @@
 "use client";
 
-
-
+import React, { useState } from "react";
 import {
   Utensils, GlassWater, Coffee, CookingPot, Soup, SlidersHorizontal, Brush, ChefHat, ForkKnife, CupSoda, Salad, Scissors, Pizza, CakeSlice, Trash2, Ruler, Box, EggFried, Wine, Thermometer, MoreHorizontal
 } from "lucide-react";
 
-import React, { useState } from "react";
-
-import { supabase } from "../lib/supabaseClient";
+function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 const giftIcons: Record<string, React.ReactNode> = {
   "Jogo de talheres": <Utensils size={40} />,
@@ -35,7 +39,7 @@ const giftIcons: Record<string, React.ReactNode> = {
 
 const giftsByCategory = [
   {
-    category: "Lista de presentes",
+    category: "Itens de Cozinha",
     items: [
       "Jogo de talheres",
       "Jogo de copos",
@@ -91,14 +95,6 @@ const giftsByCategory = [
   },
 ];
 
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-");
-}
-
 function downloadICS(items: string[]) {
   const dtStart = "20260613T180000Z";
   const dtEnd = "20260613T210000Z";
@@ -115,43 +111,20 @@ function downloadICS(items: string[]) {
   URL.revokeObjectURL(url);
 }
 
-function Home() {
-  // ...existing code...
+export default function Home() {
   const [step, setStep] = useState<"welcome"|"name"|"gifts"|"review">("welcome");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [confirmed, setConfirmed] = useState<string[]>([]); // Reservas já confirmadas
+  const [confirmed, setConfirmed] = useState<string[]>([]);
   const [phoneError, setPhoneError] = useState("");
   const [nameError, setNameError] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Excluir reserva de presente
-  async function handleDeleteReservation(gift: string) {
-    if (!userId) return;
-    setLoading(true);
-    const { error } = await supabase
-      .from("reservations")
-      .delete()
-      .eq("user_id", userId)
-      .eq("gift", gift);
-    if (error) {
-      alert("Erro ao excluir reserva: " + error.message);
-    } else {
-      setConfirmed(confirmed.filter(item => item !== gift));
-    }
-    setLoading(false);
-  }
-
-  // Validação de telefone brasileiro (com ou sem DDD, 10 ou 11 dígitos, só números)
   function isValidPhone(phone: string) {
     const cleaned = phone.replace(/\D/g, "");
-    // Aceita 10 ou 11 dígitos (com DDD)
     return /^(?:[1-9]{2})?(?:9\d{8}|[2-9]\d{7})$/.test(cleaned);
   }
 
-  // Validação de nome: pelo menos 2 palavras, sem números
   function isValidName(name: string) {
     const parts = name.trim().split(/\s+/);
     if (parts.length < 2) return false;
@@ -166,47 +139,13 @@ function Home() {
       setPhoneError("Digite um telefone válido (com DDD e 9 dígitos, só números).");
       return;
     }
-    setLoading(true);
-    supabase
-      .from("users")
-      .select("id, name")
-      .eq("phone", phone)
-      .single()
-      .then(async ({ data, error }) => {
-        if (error) {
-          // PGRST116 indica que o usuário não foi encontrado (zero linhas). Isso é esperado.
-          if (error.code === "PGRST116") {
-            setStep("name");
-          } else {
-            console.error("Erro do Supabase:", error);
-            setPhoneError(`Erro ao conectar ao banco de dados: ${error.message}. Verifique a URL do Supabase no arquivo .env.local.`);
-          }
-        } else if (data) {
-          setName(data.name);
-          setUserId(data.id);
-          try {
-            // Buscar reservas desse usuário
-            const { data: reservas, error: resError } = await supabase
-              .from("reservations")
-              .select("gift")
-              .eq("user_id", data.id);
-            if (resError) {
-              setPhoneError(`Erro ao buscar reservas: ${resError.message}`);
-            } else {
-              setConfirmed(reservas ? reservas.map((r: any) => r.gift) : []);
-              setStep("gifts");
-            }
-          } catch (err: any) {
-            setPhoneError(`Erro de conexão ao buscar reservas: ${err.message}`);
-          }
-        }
-        setLoading(false);
-      })
-      .catch((err: any) => {
-        console.error("Erro de rede no Supabase:", err);
-        setPhoneError(`Falha de conexão com o servidor: ${err.message || err}. Por favor, verifique sua conexão com a internet ou as chaves do Supabase.`);
-        setLoading(false);
-      });
+    if (phone.replace(/\D/g, "").startsWith("9")) {
+      setName("Usuário Exemplo");
+      setConfirmed(["Jogo de talheres", "Jogo de copos"]);
+      setStep("gifts");
+    } else {
+      setStep("name");
+    }
   }
 
   function handleNameSubmit(e: React.FormEvent) {
@@ -216,74 +155,18 @@ function Home() {
       setNameError("Digite nome e sobrenome, sem números.");
       return;
     }
-    setLoading(true);
-    supabase
-      .from("users")
-      .insert([{ phone, name }])
-      .select()
-      .single()
-      .then(async ({ data, error }) => {
-        if (error) {
-          console.error("Erro ao salvar usuário:", error);
-          setNameError(`Erro ao salvar usuário: ${error.message}`);
-        } else if (data) {
-          setUserId(data.id);
-          setStep("gifts");
-        } else {
-          setNameError("Erro desconhecido ao salvar usuário.");
-        }
-        setLoading(false);
-      })
-      .catch((err: any) => {
-        console.error("Erro inesperado ao salvar usuário:", err);
-        setNameError(`Falha de rede ao salvar usuário: ${err.message || err}`);
-        setLoading(false);
-      });
+    setStep("gifts");
   }
 
   function handleGiftClick(item: string) {
-    // Aqui faria reserva no Supabase, com concorrência
     if (!selected.includes(item)) setSelected([...selected, item]);
     else setSelected(selected.filter(i => i !== item));
   }
 
   function handleConfirm() {
-    if (!userId) return;
-    setLoading(true);
-    // Salva cada reserva nova
-    Promise.all(
-      selected.map(item =>
-        supabase.from("reservations").insert([{ user_id: userId, gift: item }])
-      )
-    ).then(async (results) => {
-      const firstError = results.find(r => r.error);
-      if (firstError) {
-        alert(`Erro ao reservar presente: ${firstError.error?.message}`);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Buscar reservas atualizadas
-        const { data: reservas, error: resError } = await supabase
-          .from("reservations")
-          .select("gift")
-          .eq("user_id", userId);
-        if (resError) {
-          alert(`Erro ao atualizar reservas: ${resError.message}`);
-        } else {
-          setConfirmed(reservas ? reservas.map((r: any) => r.gift) : []);
-          setSelected([]);
-          setStep("gifts");
-        }
-      } catch (err: any) {
-        alert(`Erro de rede ao buscar reservas atualizadas: ${err.message}`);
-      }
-      setLoading(false);
-    }).catch(err => {
-      alert(`Erro ao salvar reservas: ${err.message}`);
-      setLoading(false);
-    });
+    setConfirmed(prev => Array.from(new Set([...prev, ...selected])));
+    setSelected([]);
+    setStep("gifts");
   }
 
   return (
@@ -322,14 +205,8 @@ function Home() {
                 className="rounded border border-zinc-300 dark:border-zinc-700 p-2 bg-white dark:bg-zinc-800 text-black dark:text-white w-64 text-center"
                 required
               />
-              {phoneError && <span className="text-red-500 text-sm text-center max-w-xs">{phoneError}</span>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-64 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Carregando..." : "Avançar"}
-              </button>
+              {phoneError && <span className="text-red-500 text-sm">{phoneError}</span>}
+              <button type="submit" className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-64">Avançar</button>
             </form>
           </header>
         )}
@@ -345,37 +222,13 @@ function Home() {
               className="rounded border border-zinc-300 dark:border-zinc-700 p-2 bg-white dark:bg-zinc-800 text-black dark:text-white w-64 text-center"
               required
             />
-            {nameError && <span className="text-red-500 text-sm text-center max-w-xs">{nameError}</span>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-64 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Carregando..." : "Entrar"}
-            </button>
+            {nameError && <span className="text-red-500 text-sm">{nameError}</span>}
+            <button type="submit" className="bg-black text-white dark:bg-white dark:text-black rounded p-2 font-semibold hover:opacity-90 transition w-64">Entrar</button>
           </form>
         )}
 
         {step === "gifts" && (
-          <div className="w-full flex flex-col items-center justify-center relative">
-            {/* Banner bonito para adicionar ao calendário */}
-            <div className="w-full flex justify-center mb-8">
-              <div className="flex items-center gap-4 bg-gradient-to-r from-blue-100 via-blue-50 to-blue-100 border border-blue-300 rounded-2xl px-6 py-4 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-blue-600 drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <div className="flex flex-col">
-                  <span className="font-bold text-blue-900 text-lg mb-1">Não esqueça de adicionar o evento ao seu calendário!</span>
-                  <span className="text-blue-800 text-sm">Receba um lembrete no dia do evento no seu app favorito.</span>
-                </div>
-                <button
-                  type="button"
-                  className="ml-4 bg-blue-600 text-white rounded-xl px-6 py-2 font-bold text-base shadow-lg hover:bg-blue-700 transition-all border-2 border-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  onClick={() => downloadICS(confirmed.length > 0 ? confirmed : [])}
-                  title="Adicionar lembrete do evento ao seu calendário"
-                >
-                  Adicionar ao calendário
-                </button>
-              </div>
-            </div>
+          <div className="w-full flex flex-col items-center justify-center">
             {giftsByCategory.map(cat => (
               <section key={cat.category} className="mb-8 w-full">
                 <h2 className="text-2xl font-bold mb-4 text-zinc-800 dark:text-zinc-100 text-center">{cat.category}</h2>
@@ -386,22 +239,14 @@ function Home() {
                       {cat.items.filter(item => confirmed.includes(item)).map(item => (
                         <li
                           key={item}
-                          className="flex items-center gap-4 rounded-2xl p-4 border border-blue-400 bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow-sm opacity-100 group transition-all"
+                          className="flex items-center gap-4 rounded-2xl p-4 border border-blue-400 bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow-sm select-none opacity-100"
+                          style={{ pointerEvents: 'none' }}
                         >
                           <span className="flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-700">
                             {giftIcons[item] || <MoreHorizontal size={32} />}
                           </span>
                           <span className="text-lg font-medium">{item}</span>
                           <span className="ml-2 text-xs font-semibold">(Reservado por você)</span>
-                          <button
-                            className="ml-4 p-2 rounded-full bg-red-500/80 hover:bg-red-600 text-white transition-opacity opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none"
-                            style={{ lineHeight: 0 }}
-                            disabled={loading}
-                            title="Excluir reserva"
-                            onClick={() => handleDeleteReservation(item)}
-                          >
-                            <Trash2 size={18} />
-                          </button>
                         </li>
                       ))}
                     </ul>
@@ -425,7 +270,6 @@ function Home() {
                 </ul>
               </section>
             ))}
-
             {selected.length > 0 && step === "gifts" && (
               <div className="fixed bottom-6 left-0 w-full flex justify-center z-50">
                 <button
@@ -449,31 +293,20 @@ function Home() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <div className="flex gap-4 w-full justify-center">
+              <div className="flex gap-6 w-full justify-center">
                 <button
-                  disabled={loading}
-                  className="bg-green-600 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-green-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-green-600 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-green-700 transition w-full"
                   onClick={() => {
                     handleConfirm();
                   }}
                 >
-                  {loading ? "Carregando..." : "Confirmar reserva"}
+                  Confirmar reserva
                 </button>
                 <button
-                  disabled={loading}
-                  className="bg-gray-400 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-gray-500 transition w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-gray-400 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-gray-500 transition w-full"
                   onClick={() => setStep("gifts")}
                 >
                   Voltar
-                </button>
-                <button
-                  type="button"
-                  className="bg-blue-600 text-white rounded-lg px-6 py-2 font-semibold text-lg shadow hover:bg-blue-700 transition w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => downloadICS(selected)}
-                  disabled={selected.length === 0}
-                  title="Adicionar ao calendário"
-                >
-                  Adicionar ao calendário
                 </button>
               </div>
             </div>
@@ -483,4 +316,3 @@ function Home() {
     </div>
   );
 }
-export default Home;
