@@ -167,14 +167,14 @@ function Home() {
       return;
     }
     setLoading(true);
-    supabase
-      .from("users")
-      .select("id, name")
-      .eq("phone", phone)
-      .single()
-      .then(async ({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, name")
+          .eq("phone", phone)
+          .single();
         if (error) {
-          // PGRST116 indica que o usuário não foi encontrado (zero linhas). Isso é esperado.
           if (error.code === "PGRST116") {
             setStep("name");
           } else {
@@ -185,7 +185,6 @@ function Home() {
           setName(data.name);
           setUserId(data.id);
           try {
-            // Buscar reservas desse usuário
             const { data: reservas, error: resError } = await supabase
               .from("reservations")
               .select("gift")
@@ -200,13 +199,13 @@ function Home() {
             setPhoneError(`Erro de conexão ao buscar reservas: ${err.message}`);
           }
         }
-        setLoading(false);
-      })
-      .catch((err: any) => {
+      } catch (err: any) {
         console.error("Erro de rede no Supabase:", err);
         setPhoneError(`Falha de conexão com o servidor: ${err.message || err}. Por favor, verifique sua conexão com a internet ou as chaves do Supabase.`);
+      } finally {
         setLoading(false);
-      });
+      }
+    })();
   }
 
   function handleNameSubmit(e: React.FormEvent) {
