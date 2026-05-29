@@ -216,12 +216,13 @@ function Home() {
       return;
     }
     setLoading(true);
-    supabase
-      .from("users")
-      .insert([{ phone, name }])
-      .select()
-      .single()
-      .then(async ({ data, error }) => {
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .insert([{ phone, name }])
+          .select()
+          .single();
         if (error) {
           console.error("Erro ao salvar usuário:", error);
           setNameError(`Erro ao salvar usuário: ${error.message}`);
@@ -231,13 +232,13 @@ function Home() {
         } else {
           setNameError("Erro desconhecido ao salvar usuário.");
         }
-        setLoading(false);
-      })
-      .catch((err: any) => {
+      } catch (err: any) {
         console.error("Erro inesperado ao salvar usuário:", err);
         setNameError(`Falha de rede ao salvar usuário: ${err.message || err}`);
+      } finally {
         setLoading(false);
-      });
+      }
+    })();
   }
 
   function handleGiftClick(item: string) {
